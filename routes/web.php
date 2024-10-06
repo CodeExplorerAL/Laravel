@@ -8,6 +8,7 @@ use App\Http\Middleware\MyCheck;
 use App\Http\Middleware\AnotherMiddleware;
 use Illuminate\Support\Facades\Route;
 use SebastianBergmann\CodeCoverage\Report\Html\Dashboard;
+use Illuminate\Support\Facades\File;
 
 Route::get('/', function () {
     return view('welcome');
@@ -173,3 +174,19 @@ Route::put('main', function () {
     // 處理 PUT 請求
     return 'PUT 請求成功！';
 })->name('main');
+
+
+
+// 13. 跳轉網頁
+//- 13-1.跳轉到一般網站
+Route::get('/test', function () {
+    return File::get(public_path() . '/test.html');
+});
+
+//- 13-2.跳轉到外部網站
+Route::get(
+    "/go",
+    function () {
+        return redirect()->away("https://www.google.com");
+    }
+);
