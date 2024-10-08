@@ -4,11 +4,13 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\FormController;
 use App\Http\Controllers\ExampleController;
+use App\Http\Controllers\UsersController; //- 15
 use App\Http\Middleware\MyCheck;
 use App\Http\Middleware\AnotherMiddleware;
 use Illuminate\Support\Facades\Route;
 use SebastianBergmann\CodeCoverage\Report\Html\Dashboard;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\DB;      //- 15
 
 Route::get('/', function () {
     return view('welcome');
@@ -177,7 +179,7 @@ Route::put('main', function () {
 
 
 
-// 13. 跳轉網頁
+// 13.跳轉網頁
 //- 13-1.跳轉到一般網站
 Route::get('/test', function () {
     return File::get(public_path() . '/test.html');
@@ -190,3 +192,152 @@ Route::get(
         return redirect()->away("https://www.google.com");
     }
 );
+
+
+// 15.匯入元件與執行 SQL
+//- 15-1.路由版
+Route::get('/users', function () {
+    // 查詢 UserInfo 表中的所有用戶
+    $users = DB::select("select * from UserInfo");
+
+    foreach ($users as $user) {
+        echo $user->cname . "<br>";
+    }
+});
+
+//- 15-2.控制器版( web.php & UserController.php & index.blade.php )
+Route::get('/users2', [UsersController::class, 'index']);
+
+//- 15-3.Model版( web.php & UserController.php & index.blade.php & MyModel.php )
+Route::get('/users3', [UsersController::class, 'show']);
+
+
+// 16.綁定參數
+//- 16-1.語法一
+Route::get('/users4', function () {
+    $users = DB::select('select * from UserInfo where uid = ?', ['A01']);
+
+    foreach ($users as $user) {
+        echo $user->cname . "<br />";
+    }
+});
+
+//- 16-2.語法二
+Route::get('/users5', function () {
+    $users = DB::select('select * from UserInfo where uid = :uid', ['uid' => 'A01']);
+
+    foreach ($users as $user) {
+        echo $user->cname . "<br />";
+    }
+});
+
+
+// 17.SQL 查詢方法
+//- select
+Route::get('/users6', function () {
+    $users = DB::select("select * from UserInfo where uid like ?", ['1%']);
+
+    foreach ($users as $user) {
+        echo $user->cname . "<br />";
+    }
+});
+
+//- insert
+Route::get('/users7', function () {
+    // 執行 INSERT 查詢，插入一筆資料
+    $affectedRows = DB::insert("insert into UserInfo (uid, cname, PWD) values (?, ?, ?)", ['10100', 'AA', null]);
+
+    // 顯示影響的資料筆數
+    echo "插入資料成功，影響的資料筆數為： " . $affectedRows;
+});
+
+//- update
+Route::get('/users8', function () {
+    // 執行 UPDATE 查詢，更新一筆資料
+    $affectedRows = DB::update("update UserInfo set PWD = ? where uid =?", [null, '1010']);
+
+    // 顯示影響的資料筆數
+    echo "更新資料成功，影響的資料筆數為： " . $affectedRows;
+});
+
+//- delete
+Route::get('/users9', function () {
+    // 執行 DELETE 查詢，刪除一筆資料
+    $affectedRows = DB::delete('delete from UserInfo where uid = ?', ['10100']);
+
+    // 顯示影響的資料筆數
+    echo "刪除資料成功，影響的資料筆數為： " . $affectedRows;
+});
+
+//- scalar
+Route::get('/users10', function () {
+    // 執行 SELECT 查詢，只傳回一個欄位值
+    $affectedRows = DB::scalar('select cname from UserInfo where uid = 1010');
+
+    // 顯示名字
+    echo "刪除資料成功，影響的資料筆數為： " . $affectedRows;
+});
+
+//- statement
+Route::get('/users11', function () {
+    // 執行 DROP TABLE 指令，沒有傳回值
+    DB::statement("drop table Bill");
+
+    echo "資料表已刪除";
+});
+
+
+// 18. TRANSACTION交易
+//- Exception
+Route::get('/transaction1', function () {
+    try {
+        DB::transaction(function () {
+            DB::delete("delete from Live");
+            // 嘗試插入資料到 UserInfo 中，如果主索引重複則會出錯並觸發例外
+            DB::insert("insert into UserInfo (uid, cname) values ('A01', '吳小美')");
+        });
+
+        echo "所有操作成功，已提交變更。";
+    } catch (\Exception $e) {
+        // 捕獲例外並顯示錯誤訊息
+        echo "發生錯誤，操作已回滾：" . $e->getMessage();
+    }
+});
+//- Throwable
+Route::get('/transaction2', function () {
+    try {
+        DB::transaction(function () {
+            DB::delete("delete from Live");
+            DB::insert("insert into UserInfo values ('A01', '吳小美')");
+        });
+        echo "所有操作成功，已提交變更。";
+    } catch (Throwable $e) {
+        report($e);
+        abort(503);
+    }
+});
+//- 手動交易
+Route::get('/transaction3', function () {
+    try {
+        // 開始交易
+        DB::beginTransaction();
+
+        // 執行一些資料庫操作
+        DB::delete("DELETE FROM Live");
+        DB::insert("INSERT INTO UserInfo (uid, cname) VALUES ('A01', '吳小美')");
+
+        // 提交交易，將變更寫入資料庫
+        DB::commit();
+
+        return "交易成功，資料已提交！";
+    } catch (Throwable $e) {
+        // 如果有錯誤，回滾交易
+        DB::rollBack();
+
+        // 記錄錯誤到日誌
+        report($e);
+
+        // 返回 HTTP 503 錯誤
+        abort(503, '交易失敗，系統錯誤！');
+    }
+});
