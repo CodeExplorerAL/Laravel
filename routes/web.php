@@ -194,6 +194,7 @@ Route::get(
 );
 
 
+
 // 15.匯入元件與執行 SQL
 //- 15-1.路由版
 Route::get('/users', function () {
@@ -210,6 +211,7 @@ Route::get('/users2', [UsersController::class, 'index']);
 
 //- 15-3.Model版( web.php & UserController.php & index.blade.php & MyModel.php )
 Route::get('/users3', [UsersController::class, 'show']);
+
 
 
 // 16.綁定參數
@@ -230,6 +232,7 @@ Route::get('/users5', function () {
         echo $user->cname . "<br />";
     }
 });
+
 
 
 // 17.SQL 查詢方法
@@ -287,6 +290,7 @@ Route::get('/users11', function () {
 });
 
 
+
 // 18. TRANSACTION交易
 //- Exception
 Route::get('/transaction1', function () {
@@ -341,3 +345,82 @@ Route::get('/transaction3', function () {
         abort(503, '交易失敗，系統錯誤！');
     }
 });
+
+
+
+// 19. QUERY BUILDER
+//- 不帶條件
+Route::get('/query1', function () {
+    $users = DB::table('UserInfo')->get();
+    return $users;
+});
+
+//- 帶條件
+Route::get('query2', function () {
+    $users = DB::table('UserInfo')
+        ->where('cname', '王大明')
+        ->get();
+    return $users;
+});
+
+//- 查詢特定欄位
+Route::get('/query3', function () {
+    $users = DB::table('UserInfo')
+        ->select('uid', 'cname')
+        ->get();
+    return $users;
+});
+
+//- 取得一筆資料中的特定欄位值
+Route::get('query4', function () {
+    $cname = DB::table('UserInfo')
+        ->where('cname', '王大明')
+        ->value('uid');
+    echo $cname;
+});
+
+//- JOIN
+Route::get('query5', function () {
+    $users = DB::table('UserInfo')
+
+        // join
+        ->join('Live', 'UserInfo.uid', '=', 'Live.uid')
+        ->join('House', 'Live.hid', '=', 'House.hid')
+
+        // rightjoin
+        // ->rightJoin('Live', 'UserInfo.uid', '=', 'Live.uid')
+        // ->rightJoin('House', 'Live.hid', '=', 'House.hid')
+
+        // leftjoin
+        // ->leftJoin('Live', 'UserInfo.uid', '=', 'Live.uid')
+        // ->leftJoin('House', 'Live.hid', '=', 'House.hid')
+
+        // crossjoin
+        // ->crossJoin('Live', 'UserInfo.uid', '=', 'Live.uid')
+        // ->crossJoin('House', 'Live.hid', '=', 'House.hid')
+
+        ->where('UserInfo.uid', 'A01')
+        ->get();
+    return $users;
+});
+
+//- 排序
+Route::get('query6', function () {
+    $users = DB::table('Bill')
+        // ->orderBy('fee') // 順向排序
+        ->orderBy('fee', 'desc')    // 反向排序
+        ->get();
+    return $users;
+});
+
+//- 除錯
+Route::get('query7', function () {
+    // DB::table('UserInfo')->dd();
+    // DB::table('UserInfo')->dump();
+    // DB::table('UserInfo')->get()->dd();
+    DB::table('UserInfo')->get()->dump();
+});
+
+
+
+// ELOQUENT
