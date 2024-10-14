@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Route;
 use SebastianBergmann\CodeCoverage\Report\Html\Dashboard;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\DB;      //- 15
+use App\Models\UserInfo;
 
 Route::get('/', function () {
     return view('welcome');
@@ -236,7 +237,7 @@ Route::get('/users5', function () {
 
 
 // 17.SQL 查詢方法
-//- select
+//- 17-1.select
 Route::get('/users6', function () {
     $users = DB::select("select * from UserInfo where uid like ?", ['1%']);
 
@@ -245,7 +246,7 @@ Route::get('/users6', function () {
     }
 });
 
-//- insert
+//- 17-2.insert
 Route::get('/users7', function () {
     // 執行 INSERT 查詢，插入一筆資料
     $affectedRows = DB::insert("insert into UserInfo (uid, cname, PWD) values (?, ?, ?)", ['10100', 'AA', null]);
@@ -254,7 +255,7 @@ Route::get('/users7', function () {
     echo "插入資料成功，影響的資料筆數為： " . $affectedRows;
 });
 
-//- update
+//- 17-3.update
 Route::get('/users8', function () {
     // 執行 UPDATE 查詢，更新一筆資料
     $affectedRows = DB::update("update UserInfo set PWD = ? where uid =?", [null, '1010']);
@@ -263,7 +264,7 @@ Route::get('/users8', function () {
     echo "更新資料成功，影響的資料筆數為： " . $affectedRows;
 });
 
-//- delete
+//- 17-4.delete
 Route::get('/users9', function () {
     // 執行 DELETE 查詢，刪除一筆資料
     $affectedRows = DB::delete('delete from UserInfo where uid = ?', ['10100']);
@@ -272,7 +273,7 @@ Route::get('/users9', function () {
     echo "刪除資料成功，影響的資料筆數為： " . $affectedRows;
 });
 
-//- scalar
+//- 17-5.scalar
 Route::get('/users10', function () {
     // 執行 SELECT 查詢，只傳回一個欄位值
     $affectedRows = DB::scalar('select cname from UserInfo where uid = 1010');
@@ -281,7 +282,7 @@ Route::get('/users10', function () {
     echo "刪除資料成功，影響的資料筆數為： " . $affectedRows;
 });
 
-//- statement
+//- 17-6.statement
 Route::get('/users11', function () {
     // 執行 DROP TABLE 指令，沒有傳回值
     DB::statement("drop table Bill");
@@ -292,7 +293,7 @@ Route::get('/users11', function () {
 
 
 // 18. TRANSACTION交易
-//- Exception
+//- 18-1.Exception
 Route::get('/transaction1', function () {
     try {
         DB::transaction(function () {
@@ -307,7 +308,7 @@ Route::get('/transaction1', function () {
         echo "發生錯誤，操作已回滾：" . $e->getMessage();
     }
 });
-//- Throwable
+//- 18-2.Throwable
 Route::get('/transaction2', function () {
     try {
         DB::transaction(function () {
@@ -320,7 +321,7 @@ Route::get('/transaction2', function () {
         abort(503);
     }
 });
-//- 手動交易
+//- 18-3.手動交易
 Route::get('/transaction3', function () {
     try {
         // 開始交易
@@ -349,13 +350,13 @@ Route::get('/transaction3', function () {
 
 
 // 19. QUERY BUILDER
-//- 不帶條件
+//- 19-1.不帶條件
 Route::get('/query1', function () {
     $users = DB::table('UserInfo')->get();
     return $users;
 });
 
-//- 帶條件
+//- 19-2.帶條件
 Route::get('query2', function () {
     $users = DB::table('UserInfo')
         ->where('cname', '王大明')
@@ -363,7 +364,7 @@ Route::get('query2', function () {
     return $users;
 });
 
-//- 查詢特定欄位
+//- 19-3.查詢特定欄位
 Route::get('/query3', function () {
     $users = DB::table('UserInfo')
         ->select('uid', 'cname')
@@ -371,7 +372,7 @@ Route::get('/query3', function () {
     return $users;
 });
 
-//- 取得一筆資料中的特定欄位值
+//- 19-4.取得一筆資料中的特定欄位值
 Route::get('query4', function () {
     $cname = DB::table('UserInfo')
         ->where('cname', '王大明')
@@ -379,7 +380,7 @@ Route::get('query4', function () {
     echo $cname;
 });
 
-//- JOIN
+//- 19-5.JOIN
 Route::get('query5', function () {
     $users = DB::table('UserInfo')
 
@@ -404,7 +405,7 @@ Route::get('query5', function () {
     return $users;
 });
 
-//- 排序
+//- 19-6.排序
 Route::get('query6', function () {
     $users = DB::table('Bill')
         // ->orderBy('fee') // 順向排序
@@ -413,7 +414,7 @@ Route::get('query6', function () {
     return $users;
 });
 
-//- 除錯
+//- 19-7.除錯
 Route::get('query7', function () {
     // DB::table('UserInfo')->dd();
     // DB::table('UserInfo')->dump();
@@ -423,4 +424,52 @@ Route::get('query7', function () {
 
 
 
-// ELOQUENT
+// 20.ELOQUENT（ web.php & UserInfo.php->Model ）
+//- 20-1.查詢資料
+Route::get('eloquent1', function () {
+    foreach (UserInfo::all() as $user) {
+        echo $user->cname . "<br />";
+    }
+});
+
+//- 20-2.查詢部分資料
+Route::get('eloquent2', function () {
+    foreach (UserInfo::where('uid', 'A01')->get() as $user) {
+        echo $user->cname . "<br />";
+    }
+});
+
+//- 20-3.新增資料
+Route::get('eloquent3', function () {
+    $user = new UserInfo;
+    $user->uid = 'Z01';
+    $user->cname = '吳小美';
+
+    $user->save();
+});
+
+//- 20-4.修改資料-1
+Route::get('eloquent4', function () {
+    $user = UserInfo::find('Z01');  // find() 函數只找主索引欄位
+    $user->cname = '吳美美';
+    $user->save();
+});
+
+//- 20-4.修改資料-2
+Route::get('eloquent5', function () {
+    UserInfo::where('uid', 'Z01')
+        ->update(['cname' => '吳大美']);
+});
+
+//- 20-5.刪除資料-1
+// delete 後不用下 save()，如果反悔了，可以下 save() 把資料重新寫回資料庫
+Route::get('eloquent6', function () {
+    $user = UserInfo::find('Z01');
+    $user->delete();
+});
+
+//- 20-5.刪除資料-2
+// delete 後不用下 save()，如果反悔了，可以下 save() 把資料重新寫回資料庫
+Route::get('eloquent7', function () {
+    $user = UserInfo::where('uid', 'Z01')->delete();
+});
