@@ -11,7 +11,11 @@ use Illuminate\Support\Facades\Route;
 use SebastianBergmann\CodeCoverage\Report\Html\Dashboard;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\DB;      //- 15
-use App\Models\UserInfo;
+use App\Models\UserInfo;            // 21.關聯
+use App\Models\House;               // 21.關聯
+use App\Models\Phone;               // 21.關聯
+
+
 
 Route::get('/', function () {
     return view('welcome');
@@ -472,4 +476,47 @@ Route::get('eloquent6', function () {
 // delete 後不用下 save()，如果反悔了，可以下 save() 把資料重新寫回資料庫
 Route::get('eloquent7', function () {
     $user = UserInfo::where('uid', 'Z01')->delete();
+});
+
+// 21.關聯
+//- 21-1. 多對多關聯 查詢
+Route::get('/query/{uid}', function ($uid) {
+    $user = UserInfo::find($uid);
+    echo $user->cname . '<br />';
+
+    foreach ($user->lives as $house) {
+        echo $house->address . '<br />';
+    }
+});
+
+//- 21-2. 多對多關聯 新增
+Route::get('/add-house', function () {
+    $user = UserInfo::find('A04');
+    $house = House::find(4);
+
+    $user->lives()->save($house);
+});
+
+//- 21-3. 一對多關聯 查詢
+Route::get('/find-phone', function () {
+    $house = House::find(1);
+    foreach ($house->own as $phone) {
+        echo $phone->hid;
+    }
+});
+
+//- 21-4. 一對多關聯 新增
+Route::get('/add-phone', function () {
+    $house = House::find(4);
+    $phone = new Phone();
+    $phone->tel = '1414';
+    $house->own()->save($phone);
+});
+
+//- 21-5. 一對多關聯經過中間資料表 查詢
+Route::get('/find-bill', function () {
+    $house = House::find(1);
+    foreach ($house->bills as $bill) {
+        echo "{$bill->tel} {$bill->dd}: {$bill->fee} <br>";
+    }
 });
