@@ -4,6 +4,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\FormController;
 use App\Http\Controllers\ExampleController;
+use App\Http\Controllers\ProcessController;
 use App\Http\Controllers\UsersController; //- 15
 use App\Http\Middleware\MyCheck;
 use App\Http\Middleware\AnotherMiddleware;
@@ -520,3 +521,7 @@ Route::get('/find-bill', function () {
         echo "{$bill->tel} {$bill->dd}: {$bill->fee} <br>";
     }
 });
+
+// 23. 驗證
+Route::view('/request', 'request');
+Route::post('/process', [ProcessController::class, 'do']);
