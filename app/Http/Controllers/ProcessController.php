@@ -16,6 +16,6 @@ class ProcessController extends Controller
             'message.max' => '訊息欄輸入超過 :max 個字',
         ]);
 
-        return view('success');
+        return redirect('/');
     }
 }

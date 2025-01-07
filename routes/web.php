@@ -523,5 +523,9 @@ Route::get('/find-bill', function () {
 });
 
 // 23. 驗證
+//- 23-1. 表單驗證
 Route::view('/request', 'request');
 Route::post('/process', [ProcessController::class, 'do']);
+
+//- 23-2. 密碼驗證
+Route::post('/register', [UsersController::class, 'register']);
